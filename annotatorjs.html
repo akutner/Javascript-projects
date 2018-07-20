@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html>
+<body>
+<style id= "style">
+html {
+    font-size: 22px;
+}
+
+.text {
+
+    width: 300px;
+    text-align: justify;
+    
+}
+
+div {
+    padding-left: 8px;
+    
+}
+
+span {
+    position: relative;
+    border-width: 2px;
+    border-style: solid;
+    border-radius: 10px;
+    padding: 0px;
+    margin: 0px;
+}
+
+.quickbrown {
+    border-color: #FF9000;
+}
+
+.brownfox {
+    border-color: #A101A6;
+}
+
+.outer {
+    padding: 4px 2px;
+}
+
+.start {
+    border-right:0px;
+    border-top-right-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+.end {
+    border-left: 0px;
+    border-top-left-radius: 0px;
+    border-bottom-left-radius: 0px;
+}
+
+.overlap {
+    border-right-style: dotted !important;
+}
+
+.spacing {
+    border: 0px;
+    word-spacing: 0px;
+}
+.quick {
+  color:red;
+}
+
+
+</style>
+<script>
+
+var color_mappings = {
+	thequick:"blue",
+  quickbrown:"orange",
+  brown:"purple",
+  brownfox:"cyan",
+  doc:"chartreuse"
+
+};
+
+function entity_start(label){
+	var font_size = parseInt(window.getComputedStyle(document.getElementById("style")).fontSize);
+  var overlap = ""
+  
+
+  if(label.s){
+  	overlap="start"
+  }
+  
+  if(label.overflow){
+  	overlap = "end"
+  }
+
+  var color = ""
+  if(Object.keys(color_mappings).indexOf(label['label'])){
+  	color = "border-color: "+color_mappings[label['label']]
+  }
+  //line height = text size + 2* padding + padding
+  return '<span '+ 'id = '+label['label']+' style = "'
+  +color+'; '+
+  'padding: ' + 4*label.depth+ 'px 2px; '+
+  'line-height: '+(font_size+2*4*label.depth+15)+ 'px;"'+
+  ' class="' + label["label"] +
+  " " +overlap+'">' 
+}
+
+function entity_end(){
+  return '</span></mark>'
+}
+function getDepths(text, ann_offsets,ann_list){
+var out_text = "";
+  var ann_id_stack = [];
+  var cur_start = 0;
+	var ind = 0;
+for (const off of ann_offsets) {
+    var cur_text = text.substring(cur_start, off.loc);
+    cur_start = off.loc;
+    if (off.type === "start") {
+      var cur_label = ann_list[off.id].label;
+      ann_list[off.id].depth=1;
+      if (ann_id_stack.length > 0) {
+        // overlap
+        ann_id_stack.push(off.id);
+        
+        for (var ind in ann_id_stack){
+        	var i = ann_id_stack[ind];
+          if(ann_list[i]["depth"] < ann_id_stack.length-ind){
+          	ann_list[i]["depth"] = ann_id_stack.length-ind;
+          }
+          
+        }
+        
+      } else {
+        ann_id_stack.push(off.id);
+        out_text += cur_text + entity_start(ann_list[off.id]);
+      }
+    } else if (off.type === "end") {
+      if (ann_id_stack.length === 0) {
+        // error
+      } else if (ann_id_stack[ann_id_stack.length-1] !== off.id) {
+        // overlap?
+        var secondary_stack = [];
+        while (ann_id_stack[ann_id_stack.length-1] !== off.id&&ann_id_stack.length){
+        	var insert =ann_id_stack.pop();
+        	secondary_stack.push(insert);
+        }
+
+				
+        ann_id_stack.pop();
+        while (secondary_stack.length){
+        	var insert = secondary_stack.pop();
+        	ann_id_stack.push(insert);
+          var to_start = ann_list[insert]
+          ann_list[insert]['s'] = true;
+        }
+        
+        
+      } else {
+        ann_id_stack.pop()
+
+      }
+    }
+    ind++;
+  }
+  out_text += text.substring(cur_start)
+  return ann_list;
+}
+
+
+
+
+
+function annotateText(text, ann_list) {
+  // ann_list is a list of objects with 'start' and 'end' properties
+  // giving character offsets into 'text', and a 'label' property
+
+  // separate annotations into start and end
+  var ann_offsets = Array.from(ann_list.entries()).map(item => {
+    var ann_idx = item[0];
+    var ann = item[1];
+    return [
+      {
+        loc: ann.start,
+        type: "start",
+        id: ann_idx,
+        len : ann.label.length
+      },
+      {
+        loc: ann.end,
+        type: "end",
+        id: ann_idx,
+        len : ann.label.length
+      }
+    ];
+  });
+  // array of arrays to flattened array
+  ann_offsets = [].concat.apply([], ann_offsets);
+  // sort by loc, then by end before start
+  ann_offsets.sort(function(a, b) {
+    var val = a.loc - b.loc;
+    if (val === 0) {
+      var typecomp = (a.type.localeCompare(b.type));
+      if (typecomp) {//start comes after an end'
+      	return typecomp;
+      }else if(a.type === "start"){//both types are start
+      	return b.len-a.len//order by length for nested items
+      }else{
+      	return a.len-b.len
+      }
+    }
+    return val;
+  });
+  var out_text = "";
+  var ann_id_stack = [];
+  var cur_start = 0;
+  ann_list = getDepths(text,ann_offsets,ann_list);
+  var ann_offsets = Array.from(ann_list.entries()).map(item => {
+    var ann_idx = item[0];
+    var ann = item[1];
+    return [
+      {
+        loc: ann.start,
+        type: "start",
+        id: ann_idx,
+        depth: ann.depth,
+
+      },
+      {
+        loc: ann.end,
+        type: "end",
+        id: ann_idx,
+        depth: ann.depth,
+      }
+    ];
+  });
+  ann_offsets = [].concat.apply([], ann_offsets);
+  ann_offsets.sort(function(a, b) {
+    var val = a.loc - b.loc;
+    if (val === 0) {
+
+     	var typecomp = (a.type.localeCompare(b.type));
+      if (typecomp) {//start comes after an end'
+      	return typecomp;
+      } else if (a.type === "start"){//add depth (lower depth = earlier)
+      	return b.depth-a.depth;
+      }else{
+      	return a.depth-b.depth;
+      }
+    }
+    return val;
+  });
+  var ind =0;
+
+  for (var ind; ind<ann_offsets.length; ind++) {
+  	var off = ann_offsets[ind]
+    var cur_text = text.substring(cur_start, off.loc);
+    cur_start = off.loc;
+    if (off.type === "start") {
+      var cur_label = ann_list[off.id]
+      if (ann_id_stack.length > 0) {//overlap start
+        ann_id_stack.push(off.id);
+        out_text += cur_text + entity_start(cur_label);
+      } else {
+        ann_id_stack.push(off.id);
+        out_text += cur_text + entity_start(cur_label);
+      }
+    } else if (off.type === "end") {
+      if (ann_id_stack.length === 0) {
+        // error
+        console.log('invalid annotation?')
+      } else if (ann_id_stack[ann_id_stack.length-1] !== off.id) {
+      	//overlap
+        
+        var secondary_stack = [];
+        //pop and close into secondary stack until I've found the off.id
+        out_text += cur_text
+        while (ann_id_stack[ann_id_stack.length-1] !== off.id&&ann_id_stack.length){
+        	secondary_stack.push(ann_id_stack.pop());
+          out_text += entity_end();
+        }
+        var curloc = ann_id_stack.pop();
+        out_text += entity_end();
+        try{
+        while(ann_list[curloc].end ===ann_list[ann_id_stack[ann_id_stack.length-1]].end){
+        	console.log("sadfdsfads");
+          var curloc = ann_id_stack.pop();
+          out_text += entity_end();
+          ind++;
+        }
+        }catch(error){
+        
+        }
+        
+        
+        while (secondary_stack.length){
+        	var insert = secondary_stack.pop();
+        	ann_id_stack.push(insert);
+          var to_start = ann_list[insert]
+          to_start["overflow"] = true;
+          
+          out_text += entity_start(ann_list[insert]);
+        }
+        
+        //pop off secondary stack and reopen until secondary stack is empty
+        
+        
+        //2 closes back to back
+        
+
+      } else {
+        out_text += cur_text + entity_end();
+        ann_id_stack.pop()
+      }
+    }
+    
+  }
+  out_text += text.substring(cur_start)
+  return out_text;
+}
+ var out = annotateText("The quick brown fox jumps over the lazy dog.", [
+     { start: 0, end: 38, label: "quickbrown" },
+     { start: 1, end: 2, label: "brownfox" },
+     {start: 10, end: 35, label: "brown"},
+     {start:12, end:20, label: "own"},
+     {start:0, end: 27, label: "thequick"},
+     {start:0, end: 10, label: "124"},
+     {start:0, end:20, label: "doc"},
+     {start:4, end:15, label:"asd"},
+     {start:1, end: 38, label: "doc"},
+     {start:11, end: 14, label: "quickbrown"}
+ ]);
+document.write(out);
+</script>
+
+
+</body>
+</html> 
