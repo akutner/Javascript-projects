@@ -1,0 +1,20 @@
+
+
+weighted-query-backend:
+    restart: always
+    build: ./flask-backend
+    env_file: .weighted_backend_env
+    expose:
+        - 5000
+    ports:
+        - 5000:5000
+
+
+weighted-query-frontend:
+    restart: always
+    build: ./react-frontend
+    expose:
+        - 3000
+    ports:
+        - 3000:3000
+    env_file : .weighted_frontend_env

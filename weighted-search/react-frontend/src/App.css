@@ -1,0 +1,162 @@
+.App {
+}
+.AddAll{
+    float:right;
+    margin:5px;
+}
+
+.key{
+    background-color:orange;
+}
+.key:hover{
+    background-color:yellow;
+}
+
+.RootInput{
+    top:0;
+    left:0;
+    display:inline-block;
+}
+.Num{
+    margin:0;
+}
+
+.Viewer{
+    text-align: left;
+    width:33%;
+    float: left;
+    height:100vh;
+    overflow-y:auto;
+}
+
+.Root{
+    left: 0;
+    display: inline-block;
+}
+.DateSelector{
+    right:55px;
+}
+.Select{
+    width: 33%;
+    display: inline-block;
+}
+.Slide{
+    width: 60%;
+
+}
+.DocList{
+    list-style-type: none;
+    padding:0px 10px 0px 0px;
+}
+
+ul{
+    padding:0px 0px 0px 20px;
+}
+.List{
+    display:inline-block;
+}
+.Slider{
+    width:100%-10px;
+    overflow:hidden;
+    border-radius:5px;
+}
+.Score{
+    float:right;
+    right:0;
+}
+h3{
+    margin:0;
+
+}
+li{
+    border-radius:5px;
+}
+.TermList{
+    float: left;
+}
+.ListItem{
+    border-radius: 5px;
+    margin:10px;
+    
+
+}
+span{
+    border-radius:5px;
+}
+.Kibana{
+    background-color: #e8488b;
+}
+.Header{
+    background-color:white;
+    position:fixed;
+    width:33%;
+}
+h2{
+    float:left;
+    margin:0px;
+}
+h4{
+    float:left;
+    margin:0px;
+}
+button{
+    border-radius: 4px;
+    background-color: #e7e7e7; color:black;
+}
+input{
+    border-radius:4px;
+    
+}
+.Display{
+    display: inline;
+}
+.RemoveSlider{
+    float:right;
+}
+
+.Doc{
+    width:33%;
+}
+.hover{
+    background-color:yellow;
+    border:solid 2px;
+}
+p{
+    border: 1px solid rgba(255, 0, 0, 0);
+    margin:10px;
+    border-radius:6px;
+}
+
+
+.Marked{
+    background-color:white;
+    top:0px;
+    bottom:0px;
+    left:0px;
+    position:absolute;
+    height:100%
+}
+.numDups{
+    height: 22px;
+    width: 22px;
+    float:right;
+    text-align: center;
+    background-color:black;
+    border-radius: 50%;
+    color: white;
+}
+.val{
+    float:right;
+    margin:0;
+}
+.SliderButtons{
+    width:39%;
+    float:right;
+}
+.QueryModifier{
+    padding:6px;
+}
+.Content{
+    padding-top:20px;
+}
+
