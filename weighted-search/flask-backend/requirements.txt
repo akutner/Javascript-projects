@@ -7,7 +7,7 @@ elasticsearch==6.3.0
 Flask==1.0.2
 Flask-Cors==3.0.6
 itsdangerous==0.24
-Jinja2==2.10
+Jinja2==2.11.3
 MarkupSafe==1.0
 msgpack-numpy==0.4.1
 msgpack-python==0.5.6
